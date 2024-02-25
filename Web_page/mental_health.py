@@ -12,7 +12,7 @@ import pickle
 warnings.filterwarnings("ignore")
 
 data = pd.read_csv(
-    r"C:\Users\Anuj Bohra\Desktop\hsdhs\Mental-Health-Prediction-using-Machine-Learning-Algorithms\Web_page\mental_health.csv"
+    r"C:\Users\Anuj Bohra\Desktop\hsdhs\MentalHealth_Prediction\survey.csv"
 )
 male_str = [
     "male",
@@ -76,18 +76,16 @@ for row, col in data.iterrows():
 
 # Get rid of bullshit
 stk_list = ["A little about you", "p"]
-data = data[~train_df["Gender"].isin(stk_list)]
+data = data[~data["Gender"].isin(stk_list)]
 data["Gender"] = data["Gender"].map({"male": 0, "female": 1, "trans": 2})
 data["family_history"] = data["family_history"].map({"No": 0, "Yes": 1})
 data["treatment"] = data["treatment"].map({"No": 0, "Yes": 1})
 
-data = np.array(data)
+X = data.iloc[:, 1:-1].values
+y = data.iloc[:, -1].values
 
-X = data[1:, 1:-1]
-y = data[1:, -1]
-y = y.astype("int")
-X = X.astype("int")
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
 clf1 = KNeighborsClassifier(n_neighbors=1)
 clf2 = RandomForestClassifier(random_state=1)
 clf3 = GaussianNB()
@@ -95,5 +93,10 @@ lr = LogisticRegression()
 stack = StackingClassifier(classifiers=[clf1, clf2, clf3], meta_classifier=lr)
 stack.fit(X_train, y_train)
 
-pickle.dump(stack, open("model.pkl", "wb"))
-model = pickle.load(open("model.pkl", "rb"))
+# Save the trained model to a pickle file
+with open("stacked_ensemble_model.pkl", "wb") as f:
+    pickle.dump(stack, f)
+
+# Load the model back into memory
+with open("stacked_ensemble_model.pkl", "rb") as f:
+    loaded_model = pickle.load(f)
